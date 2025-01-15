@@ -1,0 +1,76 @@
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh; 
+  display: flex;
+  flex-direction: column;
+  background-color: #b6b9e8;
+  color: white;
+  overflow: hidden;
+}
+
+
+#header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+#label {
+  background: linear-gradient(45deg, #6a11cb, #2575fc);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  font-weight: bold;
+  border: none;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  cursor: pointer;
+}
+
+#label:hover {
+  transform: scale(1.1);
+  background: linear-gradient(45deg, #a12cbf, #525fe1);
+}
+
+#filename {
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #b0b0b0;
+  text-align: center;
+}
+
+
+#visualiser {
+  flex: 1; 
+  background: linear-gradient(135deg, #232526, #414345);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#footer {
+  text-align: center;
+  padding: 10px;
+  background: linear-gradient(45deg, #33638c, #4d7c7e, #8c94fc);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  animation: gradient-animate 2s infinite alternate;
+  position: sticky; 
+  bottom: 0;
+}
+
+@keyframes gradient-animate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+input {
+  display: none;
+}
