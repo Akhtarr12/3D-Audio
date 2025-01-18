@@ -62,43 +62,44 @@ function startVis() {
   renderer.setClearColor("#000000"); 
   area.appendChild(renderer.domElement);
 
-  
   const geometry = new THREE.IcosahedronGeometry(20, 3);
   const material = new THREE.MeshLambertMaterial({
-    color: "#696969",
+    color: "#ADD8E6",
     wireframe: true,
   });
   const sphere = new THREE.Mesh(geometry, material);
   scene.add(sphere);
 
-  
+  // Create audio-reactive lights
   const lights = [];
   for (let i = 0; i < 6; i++) {
-    const color = new THREE.Color(
-      Math.random(),
-      Math.random(),
-      Math.random(),
-      Math.random(),
-      Math.random(),
-      Math.random(),
-
-    ); 
-    const light = new THREE.PointLight(color, 1, 200);
+    const light = new THREE.PointLight(Math.random() * 0xffffff, 1, 100);
     light.position.set(
       Math.random() * 200 - 100,
       Math.random() * 200 - 100,
-      Math.random() * 200 - 100,
-      Math.random() * 200 - 100,
-      Math.random() * 200 - 100,
-      Math.random() * 200 - 100,
-
+      Math.random() * 200 - 100
     );
     scene.add(light);
     lights.push(light);
   }
 
+  // Ambient light
   const ambientLight = new THREE.AmbientLight(0x404040, 0.5); 
   scene.add(ambientLight);
+
+  // Function to create other types of lights (optional)
+  function addSpotLight() {
+    const spotLight = new THREE.SpotLight(0xff0000, 2, 200, Math.PI / 4, 0.5, 1);
+    spotLight.position.set(
+      Math.random() * 200 - 100,
+      Math.random() * 200 - 100,
+      Math.random() * 200 - 100
+    );
+    scene.add(spotLight);
+  }
+  for (let i = 0; i < 2; i++) {
+    addSpotLight();  // Add a couple of spotlight lights for variation
+  }
 
   window.addEventListener("resize", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -131,7 +132,7 @@ function startVis() {
       modulate(upperAvgFr, 0, 1, 0, 4)
     );
 
-    
+    // Adjust lights based on audio
     lights.forEach((light, index) => {
       light.position.x = Math.sin(Date.now() * 0.001 + index) * 50;
       light.position.y = Math.cos(Date.now() * 0.001 + index) * 50;
@@ -141,6 +142,15 @@ function startVis() {
         1,
         0.5
       ); 
+    });
+
+    // Adjust spotlights
+    scene.children.forEach((light) => {
+      if (light instanceof THREE.SpotLight) {
+        light.intensity = modulate(upperAvgFr, 0, 1, 0.1, 5);
+        light.position.x = Math.sin(Date.now() * 0.01) * 100;
+        light.position.y = Math.cos(Date.now() * 0.01) * 100;
+      }
     });
 
     requestAnimationFrame(render);
