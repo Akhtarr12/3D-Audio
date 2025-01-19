@@ -1,15 +1,13 @@
-
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   height: 100vh; 
   display: flex;
   flex-direction: column;
-  background-color: #b6b9e8;
+  background-color: #a3a6d2;
   color: white;
   overflow: hidden;
 }
-
 
 #header {
   display: flex;
@@ -38,23 +36,21 @@ body {
 #filename {
   color: #000;
   padding: 2px;
-   font-size: 15px;
-   text-align: center;
-   font-weight: bold;
- }
- #play{
- 
+  font-size: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#play {
   color: #000000;
   font-size: 15px;
   text-align: center;
   font-weight: bold;
 }
 
-
-
 #visualiser {
   flex: 1; 
-  background: linear-gradient(135deg, #232526, #414345);
+  background: linear-gradient(135deg, #232526, #171818);
   cursor: pointer;
   display: flex;
   justify-content: center;

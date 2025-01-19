@@ -11,13 +11,23 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/102/three.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.3.0/simplex-noise.min.js"></script>
+  
+
   <div id="header">
     <label for="audio" id="label">Select file</label>
     <input type="file" id="audio" accept=".mp3">
     <div id="filename"></div>
+    <select id="visSelector">
+      <option value="mosaic">Mosaic Effect</option>
+      <option value="sphere">Sphere Effect</option>
+      
+      
+    </select>
     <div id="play">Click the ball to play/pause</div>
   </div>
-  <div id="visualiser"></div>
-  <div id="footer">>Made by Sohail | ❤️ Enjoy the Music</div>
+  <div id="visualiser">
+
+  </div>
+  <div id="footer">Made by Sohail | ❤️ Enjoy the Music</div>
 </body>
 </html>
