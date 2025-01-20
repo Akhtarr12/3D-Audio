@@ -1,4 +1,3 @@
-
 const audioInput = document.getElementById("audio");
 const area = document.getElementById("visualiser");
 const label = document.getElementById("label");
@@ -157,8 +156,111 @@ function startVis() {
   renderer.setClearColor("#000000");
   area.appendChild(renderer.domElement);
 
-  // Visualization: Mosaic
-  if (currentVisualization === "mosaic") {
+  // Visualization: Shader
+  if (currentVisualization === "shader") {
+    const shaderMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            iTime: { value: 0 },
+            iResolution: { value: new THREE.Vector3(window.innerWidth, window.innerHeight, 1) },
+            audioData: { value: 0 }
+        },
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 0.01);
+            }
+        `,
+        fragmentShader: `
+            uniform float iTime;
+            uniform vec3 iResolution;
+            uniform float audioData;
+            varying vec2 vUv;
+
+            vec3 palette(float t) {
+                vec3 a = vec3(0.5, 0.5, 0.5);
+                vec3 b = vec3(0.5, 0.5, 0.5);
+                vec3 c = vec3(1.0, 1.0, 1.0);
+                vec3 d = vec3(0.3, 0.4, 0.7);
+                return a + b * cos(6.28318 * (c * t + d));
+            }
+
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                float a = hash(i);
+                float b = hash(i + vec2(1.0, 0.0));
+                float c = hash(i + vec2(0.0, 1.0));
+                float d = hash(i + vec2(1.0, 1.0));
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+            }
+
+            void main() {
+                vec2 uv = (vUv - 0.5) * 2.0;
+                uv.x *= iResolution.x / iResolution.y;
+                float dist = length(uv);
+
+                // Move the circle in and out based on audioData
+                float circleRadius = 0.2 + audioData * 0.5; // Circle size varies with audioData
+                float circleMask = smoothstep(circleRadius, circleRadius + 0.02, dist);
+
+                float wave = sin(10.0 * (dist - iTime * 0.2)) * 0.5 + 0.5;
+                float squarePattern = abs(sin(uv.x * 5.0 + iTime)) * abs(cos(uv.y * 5.0 + iTime));
+                float triangleWave = abs(mod(uv.x * 10.0 - iTime, 2.0) - 1.0) * abs(mod(uv.y * 10.0 - iTime, 2.0) - 1.0);
+                float ripple = 0.1 / abs(0.05 - mod(dist + iTime * 0.15, 0.2));
+
+                float combinedPatterns = mix(wave, squarePattern, 0.5) + triangleWave * (audioData * 0.8) + ripple * 0.3;
+
+                vec3 baseColor = palette(dist + iTime * 0.2);
+                vec3 glowColor = vec3(1.0, 0.6, 0.3) * ripple * audioData;
+
+                float lightIntensity = audioData * 2.0;
+                vec3 light = vec3(lightIntensity) * vec3(0.8, 0.9, 1.0);
+
+                vec3 color = mix(baseColor, glowColor, 0.6) * combinedPatterns + light * 0.3;
+
+                // Apply circle mask to create the moving circle effect
+                color *= 1.0 - circleMask;
+
+                // Fade animation when audio frequency is low
+                float fade = smoothstep(0.02, 0.1, audioData);
+                color *= fade;
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `
+    });
+
+    const planeGeometry = new THREE.PlaneGeometry(2, 2);
+    const planeMesh = new THREE.Mesh(planeGeometry, shaderMaterial);
+    scene.add(planeMesh);
+
+    function animateShader() {
+        analyser.getByteFrequencyData(dataArray);
+        const avgFrequency = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        const normalizedAudio = avgFrequency / 256.0;
+
+        if (normalizedAudio > 0.01) {
+            shaderMaterial.uniforms.audioData.value = normalizedAudio;
+            shaderMaterial.uniforms.iTime.value += 0.02;
+        } else {
+            shaderMaterial.uniforms.audioData.value *= 0.9; // Gradually fade
+        }
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animateShader);
+    }
+
+    animateShader();
+}
+
+    // Visualization: Mosaic
+  else if (currentVisualization === "mosaic") {
     const gridWidth = 30;
     const gridHeight = 30;
     const tileSpacing = 15;
