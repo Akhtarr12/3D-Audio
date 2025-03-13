@@ -379,6 +379,188 @@ function startVis() {
     renderSphere();
   }
 
+  else if (currentVisualization === "psychedelicTunnel") {
+    console.log("Setting up psychedelic tunnel");
+    
+    try {
+        // Set up camera position
+        camera.position.z = 100;
+        
+        // Create a simple plane background
+        const backgroundGeometry = new THREE.PlaneGeometry(window.innerWidth, window.innerHeight);
+        const backgroundMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x000066, // Dark blue background
+            side: THREE.DoubleSide
+        });
+        const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+        background.position.z = -100;
+        scene.add(background);
+        console.log("Added background");
+        
+        // Create rings for the tunnel using ShapeGeometry
+        const rings = [];
+        const ringCount = 15;
+        const outerRadius = 30;
+        const innerRadius = 20;
+        
+        for (let i = 0; i < ringCount; i++) {
+            // Define the ring shape with an outer circle and inner hole
+            const shape = new THREE.Shape();
+            shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false); // Outer circle
+            const hole = new THREE.Path();
+            hole.absarc(0, 0, innerRadius, 0, Math.PI * 2, true);   // Inner hole
+            shape.holes.push(hole);
+            
+            // Create geometry from the shape
+            const ringGeometry = new THREE.ShapeGeometry(shape);
+            
+            // Create material with dynamic color and wireframe
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(`hsl(${(i * 15) % 360}, 70%, 50%)`),
+                side: THREE.DoubleSide,
+                wireframe: true
+            });
+            
+            // Create mesh, position it, and store initial data
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.position.z = -i * 20 - 50; // Spread rings along z-axis
+            ring.userData = { initialZ: ring.position.z };
+            rings.push(ring);
+            scene.add(ring);
+            console.log(`Added ring ${i}`);
+        }
+        
+        // Add a simple particle system
+        try {
+            const particleCount = 500;
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < particleCount; i++) {
+                const geometry = new THREE.BoxGeometry(1, 1, 1); // Small cube particles
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0xffffff, // White particles
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const particle = new THREE.Mesh(geometry, material);
+                
+                // Position particles in a tunnel-like distribution
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 20 + Math.random() * 20; // Between 20 and 40
+                particle.position.x = Math.cos(angle) * radius;
+                particle.position.y = Math.sin(angle) * radius;
+                particle.position.z = -Math.random() * 300; // From z=0 to z=-300
+                
+                // Store original data for animation
+                particle.userData = { 
+                    originalZ: particle.position.z,
+                    speed: 0.5 + Math.random() * 1.5
+                };
+                
+                particles.add(particle);
+            }
+            
+            scene.add(particles);
+            console.log(`Added ${particleCount} particles`);
+            
+            // Add basic lights (though not needed for MeshBasicMaterial)
+            const ambientLight = new THREE.AmbientLight(0x222222);
+            scene.add(ambientLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(0, 0, 50);
+            scene.add(pointLight);
+            console.log("Added lights");
+            
+            // Animation function
+            function renderPsychedelicTunnel() {
+                try {
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // Extract audio data for reactivity
+                    const bassSum = dataArray.slice(0, 5).reduce((sum, val) => sum + val, 0);
+                    const bassIntensity = bassSum / (5 * 255);
+                    
+                    const midSum = dataArray.slice(5, 20).reduce((sum, val) => sum + val, 0);
+                    const midIntensity = midSum / (15 * 255);
+                    
+                    // Update rings
+                    rings.forEach((ring, index) => {
+                        // Move rings toward the camera
+                        ring.position.z += 1 + bassIntensity * 2;
+                        
+                        // Reset position when past the camera
+                        if (ring.position.z > 50) {
+                            ring.position.z = -250; // Move to back of tunnel
+                            
+                            // Update ring color dynamically
+                            if (ring.material) {
+                                const hue = (Date.now() * 0.0002 + index * 0.1) % 1;
+                                ring.material.color.setHSL(hue, 0.7, 0.5);
+                            }
+                        }
+                        
+                        // Rotate rings based on audio
+                        ring.rotation.z += 0.01 + bassIntensity * 0.02;
+                    });
+                    
+                    // Update particles
+                    particles.children.forEach(particle => {
+                        particle.position.z += particle.userData.speed + bassIntensity * 3;
+                        
+                        // Reset particles when past the camera
+                        if (particle.position.z > 50) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const radius = 20 + Math.random() * 20;
+                            particle.position.x = Math.cos(angle) * radius;
+                            particle.position.y = Math.sin(angle) * radius;
+                            particle.position.z = -300;
+                            
+                            // Update particle color
+                            if (particle.material) {
+                                const hue = (Date.now() * 0.001) % 1;
+                                particle.material.color.setHSL(hue, 0.8, 0.5);
+                            }
+                        }
+                        
+                        // Rotate particles for visual effect
+                        particle.rotation.x += 0.01;
+                        particle.rotation.y += 0.01;
+                    });
+                    
+                    // Update background color based on audio
+                    if (background && background.material) {
+                        const bgHue = (Date.now() * 0.0001) % 1;
+                        background.material.color.setHSL(bgHue, 0.7, 0.1 + bassIntensity * 0.2);
+                    }
+                    
+                    // Update light properties
+                    if (pointLight) {
+                        const lightHue = (Date.now() * 0.0002 + 0.5) % 1;
+                        pointLight.color.setHSL(lightHue, 0.7, 0.5);
+                        pointLight.intensity = 1 + bassIntensity * 2;
+                    }
+                    
+                    // Render the scene
+                    renderer.render(scene, camera);
+                } catch (renderError) {
+                    console.error("Error in render loop:", renderError);
+                }
+                
+                requestAnimationFrame(renderPsychedelicTunnel);
+            }
+            
+            renderPsychedelicTunnel();
+            console.log("Started animation loop");
+            
+        } catch (particleError) {
+            console.error("Error creating particles:", particleError);
+        }
+    } catch (setupError) {
+        console.error("Error setting up psychedelic tunnel:", setupError);
+    }
+}
   window.addEventListener("resize", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
