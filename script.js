@@ -42,7 +42,7 @@ function showSplashScreen() {
   //  subtitle
   const subtitle = document.createElement("p");
   subtitle.textContent =
-    " Music more fun with real-time audio visualizations . This is currently at the MVP stage.";
+    " Music more fun with real-time audio visualizations.";
   subtitle.style.cssText = `
     font-size: 1.5rem;
     margin-top: 10px;
